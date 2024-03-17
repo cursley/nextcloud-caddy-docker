@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Invoke the Nextcloud CLI (occ) inside the Nextcloud container.
+
+# See https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html
+
+docker compose exec --user www-data app php occ "$@"

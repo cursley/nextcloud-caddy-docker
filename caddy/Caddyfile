@@ -1,0 +1,9 @@
+{$DOMAIN_NAME} {
+    # Configure redirects for CalDAV and CardDAV protocols
+    # See https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/reverse_proxy_configuration.html#caddy
+    redir /.well-known/carddav /remote.php/dav 301
+    redir /.well-known/caldav /remote.php/dav 301
+
+    # Reverse proxy to the Nextcloud app instance
+    reverse_proxy app
+}

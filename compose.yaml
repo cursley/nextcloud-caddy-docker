@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  # Caddy reverse proxy with automatic HTTPS configuration
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME-localhost}
+
+  # Nextcloud application server
+  app:
+    build: ./nextcloud
+    restart: unless-stopped
+    volumes:
+      - html:/var/www/html
+      - config:/var/www/html/config
+      - data:/var/www/html/data
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB-nextcloud}
+      POSTGRES_USER: ${POSTGRES_USER-nextcloud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-nextcloud}
+      REDIS_HOST: redis
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER-admin}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_INITIAL_ADMIN_PASSWORD}
+      # Reverse proxy configuration
+      NEXTCLOUD_TRUSTED_DOMAINS: ${DOMAIN_NAME-localhost}
+      TRUSTED_PROXIES: 172.16.0.0/12
+      OVERWRITEHOST: ${DOMAIN_NAME-localhost}
+      OVERWRITEPROTOCOL: https
+
+  # Database server for Nextcloud
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB-nextcloud}
+      POSTGRES_USER: ${POSTGRES_USER-nextcloud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  # Nextcloud uses Redis for caching and file locking
+  redis:
+    image: redis:7
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+    # Caddy's data directory - stores TLS certificates
+    # (see: https://caddyserver.com/docs/conventions#data-directory)
+
+  html:
+    # Nextcloud's HTML directory
+
+  data:
+    # Nextcloud's data directory - stores user data
+
+  config:
+    # Nextcloud's configuration directory
+
+  postgres_data:
+    # Contains the PostgreSQL database files
